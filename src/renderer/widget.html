@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:" />
+  <title>TempCPU — виджет</title>
+  <link rel="stylesheet" href="widget.css" />
+</head>
+<body>
+  <div class="widget" id="widget">
+    <div class="grip left" data-edge="left" title="Потяните, чтобы изменить ширину"></div>
+    <div class="grip right" data-edge="right" title="Потяните, чтобы изменить ширину"></div>
+    <div class="w-head">
+      <div class="w-brand">
+        <img class="w-icon" src="../../assets/icon-small.png" alt="" />
+        <div class="w-title">
+          <span>TempCPU</span>
+          <span id="status" class="status"></span>
+        </div>
+      </div>
+      <div class="w-actions">
+        <button id="w-menu" title="Меню">
+          <svg viewBox="0 0 24 24"><path d="M12 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm0 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm0 6a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div id="rows" class="rows"></div>
+
+    <div id="notice" class="notice" hidden>
+      <div id="notice-text" class="notice-text"></div>
+      <button id="notice-btn" class="notice-btn"></button>
+    </div>
+  </div>
+
+  <script src="widget.js"></script>
+</body>
+</html>

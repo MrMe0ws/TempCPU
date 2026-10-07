@@ -1,0 +1,202 @@
+/* Цвета и размеры повторяют виджеты MeowsConvert и MeowsClock */
+:root {
+  --surface: #1c1c1e;
+  --surface-2: #2c2c2e;
+  --surface-3: #3a3a3c;
+  --text: #fff;
+  --muted: #8e8e93;
+  --accent: #ff9f0a;
+  --accent-soft: rgba(255, 159, 10, 0.22);
+  --warm-bg: #3d3222;
+  --warm-text: #f5cf8a;
+  --warm-hint: #b39b6e;
+  --hot-bg: #3f2020;
+  --hot-text: #ff8a80;
+  --hot-hint: #c07a74;
+  --yellow: #ffd60a;
+  --red: #ff453a;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  background: transparent;
+  color: var(--text);
+  font-family: 'Segoe UI Variable Text', 'Segoe UI', system-ui, sans-serif;
+  user-select: none;
+  overflow: hidden;
+}
+
+button { font: inherit; color: inherit; border: 0; background: none; cursor: pointer; outline: none; }
+svg { width: 18px; height: 18px; fill: currentColor; }
+[hidden] { display: none !important; }
+
+.widget {
+  margin: 0;
+  padding: 8px 10px 10px;
+  background: rgba(18, 18, 20, 0.97);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  position: relative;
+}
+
+/* ---------- Ручки ширины ---------- */
+
+.grip {
+  position: absolute;
+  top: 14px;
+  bottom: 14px;
+  width: 8px;
+  z-index: 10;
+  cursor: ew-resize;
+  -webkit-app-region: no-drag;
+}
+.grip.left { left: -1px; }
+.grip.right { right: -1px; }
+.grip::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 3px;
+  height: 36px;
+  margin-top: -18px;
+  border-radius: 2px;
+  background: var(--accent);
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.grip.left::after { left: 1px; }
+.grip.right::after { right: 1px; }
+.grip:hover::after, .grip.active::after { opacity: 0.9; }
+body.resizing, body.resizing * { cursor: ew-resize !important; }
+
+/* ---------- Шапка ---------- */
+
+.w-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 30px;
+  margin-bottom: 6px;
+  -webkit-app-region: drag;
+}
+
+.w-brand { display: flex; align-items: center; gap: 7px; padding-left: 2px; min-width: 0; flex: 1 1 auto; }
+.w-icon { width: 24px; height: 24px; border-radius: 6px; -webkit-user-drag: none; }
+.w-title { display: flex; flex-direction: column; line-height: 1.15; min-width: 0; }
+.w-title span:first-child { font-size: 12px; font-weight: 600; }
+.status { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.status:empty { display: none; }
+.status.warn { color: var(--yellow); }
+.status.bad { color: var(--red); }
+
+.w-actions { display: flex; gap: 2px; -webkit-app-region: no-drag; }
+.w-actions button {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  color: var(--accent);
+  display: grid;
+  place-items: center;
+}
+.w-actions button:hover { background: rgba(255, 255, 255, 0.08); }
+
+/* ---------- Строки CPU / GPU ---------- */
+
+.rows { display: flex; flex-direction: column; gap: 6px; }
+
+.row { display: flex; gap: 6px; align-items: center; }
+
+.chip {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 48px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px 0 8px;
+}
+
+.badge {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  background: var(--surface-3);
+  color: var(--accent);
+}
+.badge svg { width: 17px; height: 17px; }
+
+.chip-text { display: flex; flex-direction: column; min-width: 0; line-height: 1.2; }
+.kind, .model { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.kind { font-size: 13px; font-weight: 700; }
+.model { font-size: 11px; color: var(--muted); }
+
+.field {
+  flex: 0 0 auto;
+  width: 96px;
+  height: 48px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-end;
+  padding: 0 10px;
+  transition: background 0.3s;
+}
+
+.temp {
+  font-size: 22px;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  transition: color 0.3s;
+}
+.temp .deg { font-size: 15px; vertical-align: 5px; margin-left: 1px; color: var(--muted); }
+.temp.none { color: var(--muted); }
+
+.hint {
+  font-size: 10px;
+  color: var(--muted);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Пороги — как активное поле MeowsConvert (жёлтый) и красный для перегрева */
+.row.warm .field { background: var(--warm-bg); }
+.row.warm .temp, .row.warm .deg { color: var(--warm-text); }
+.row.warm .hint { color: var(--warm-hint); }
+.row.hot .field { background: var(--hot-bg); }
+.row.hot .temp, .row.hot .deg { color: var(--hot-text); }
+.row.hot .hint { color: var(--hot-hint); }
+
+/* ---------- Подсказка, когда данных нет ---------- */
+
+.notice {
+  margin-top: 6px;
+  padding: 10px;
+  border-radius: 10px;
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.notice-text { font-size: 12px; line-height: 1.35; color: var(--muted); }
+.notice-btn {
+  align-self: flex-start;
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 8px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+}
+.notice-btn:hover { background: rgba(255, 159, 10, 0.32); }
+.notice-btn:disabled { opacity: 0.5; cursor: default; }
