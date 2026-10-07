@@ -21,7 +21,7 @@ MeowsConvert, MeowsClock и MeowsNotes.
 
 [Последний релиз](https://github.com/MrMe0ws/TempCPU/releases/latest) — Windows 10/11 x64:
 
-- `TempCPU Setup X.Y.Z.exe` — установщик (ярлык на рабочем столе, удаление через «Приложения»);
+- `TempCPU.Setup.X.Y.Z.exe` — установщик (ярлык на рабочем столе, удаление через «Приложения»);
 - `TempCPU-X.Y.Z-portable.zip` — без установки: распаковать и запустить `TempCPU.exe`.
 
 Файлы не подписаны, поэтому SmartScreen может предупредить о неизвестном издателе:
