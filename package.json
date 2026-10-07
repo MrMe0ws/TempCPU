@@ -1,7 +1,7 @@
 {
   "name": "tempcpu",
   "productName": "TempCPU",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Виджет температуры процессора и видеокарты для рабочего стола",
   "author": "Meows",
   "license": "UNLICENSED",

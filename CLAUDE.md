@@ -10,9 +10,10 @@
 src/
   main.js            трей, виджет, настройки, меню, автозапуск, управление LHM, IPC
   sensors.js         SensorPoller (HTTP data.json LHM), parseTree, selectReadings, readLhmServer, findLhmExe
+  system.js          память (os) и батарея (koffi: CallNtPowerInformation + GetSystemPowerStatus) — без LHM и админа
   desktop-pin.js     встраивание виджета в рабочий стол (копия из MeowsClock, префикс структур TC_)
   preload.js         window.api, белый список каналов main → renderer в CHANNELS
-  renderer/widget.*  строки CPU/GPU, подсказка «нет данных», ручки ширины
+  renderer/widget.*  строки CPU/GPU/память/диски/питание, подсказка «нет данных», ручки ширины
 scripts/
   setup-lhm.ps1      с правами админа: стоп LHM, его настройки (вкл. веб-сервер) + задача планировщика + запуск (в сборке — extraResources)
   make-icon.js       рисует иконку кодом (чип с ушками и градусником)
@@ -41,7 +42,14 @@ scripts/
   (`readLhmServer`, кэш по mtime, перечитывается в `checkLhm` при ошибках опроса).
 - `selectReadings`: CPU — первый `HardwareType = Cpu`, температура по приоритету `CPU_TEMP` (иначе максимум),
   нагрузка — `CPU Total`. GPU — все `Gpu*` с датчиком температуры (`GPU Core`, иначе максимум); без датчика —
-  не показываются (встроенная Intel обычно без него).
+  не показываются (встроенная Intel обычно без него). Мощность: CPU — `CPU Package`, GPU — `GPU Package`/`GPU Power`,
+  `platformPower` — `CPU Platform` (Intel PSys). Диски — устройства с `hdd.png`; `Warning/Critical Temperature` —
+  это пороги диска (по ним цвет), в максимум температуры их брать нельзя.
+- Память и батарея — `system.js`, читаются в `onSensorData` на каждом опросе и есть в любом состоянии. Батарею LHM
+  теряет (после смены питания у неё другой `Tag`), поэтому не через него. `Rate` из `SYSTEM_BATTERY_STATE` — мВт,
+  при разряде отрицательный; от сети без зарядки он 0 — тогда в строке «Питание» PSys.
+- Что показывать — флаги `show*` в настройках (`showLoad`, `showPower`, `showGpu`, `showMemory`, `showBattery`,
+  `showDisks`), меню «Показатели». Подстрочник CPU/GPU — нагрузка и мощность через « · ».
 - Состояния `readings.state`: `ok`, `waiting` (первые 2 мин после старта, если задача LHM есть — LHM стартует
   параллельно), `not-running`, `no-server` (процесс LHM есть — по `tasklist`, — а веб-сервер выключен или не
   отвечает; кнопка «Настроить»), `missing` (exe LHM не найден), `no-sensors` (LHM работает, датчиков нет — обычно

@@ -102,7 +102,7 @@ body.resizing, body.resizing * { cursor: ew-resize !important; }
 }
 .w-actions button:hover { background: rgba(255, 255, 255, 0.08); }
 
-/* ---------- Строки CPU / GPU ---------- */
+/* ---------- Строки: CPU, GPU, память, диски, питание ---------- */
 
 .rows { display: flex; flex-direction: column; gap: 6px; }
 
@@ -160,6 +160,7 @@ body.resizing, body.resizing * { cursor: ew-resize !important; }
 }
 .temp .deg { font-size: 15px; vertical-align: 5px; margin-left: 1px; color: var(--muted); }
 .temp.none { color: var(--muted); }
+.temp .unit { font-size: 13px; margin-left: 2px; color: var(--muted); }
 
 .hint {
   font-size: 10px;
@@ -170,10 +171,10 @@ body.resizing, body.resizing * { cursor: ew-resize !important; }
 
 /* Пороги — как активное поле MeowsConvert (жёлтый) и красный для перегрева */
 .row.warm .field { background: var(--warm-bg); }
-.row.warm .temp, .row.warm .deg { color: var(--warm-text); }
+.row.warm .temp, .row.warm .deg, .row.warm .unit { color: var(--warm-text); }
 .row.warm .hint { color: var(--warm-hint); }
 .row.hot .field { background: var(--hot-bg); }
-.row.hot .temp, .row.hot .deg { color: var(--hot-text); }
+.row.hot .temp, .row.hot .deg, .row.hot .unit { color: var(--hot-text); }
 .row.hot .hint { color: var(--hot-hint); }
 
 /* ---------- Подсказка, когда данных нет ---------- */

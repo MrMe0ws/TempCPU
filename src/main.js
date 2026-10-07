@@ -6,6 +6,7 @@ const { execFile, spawn } = require('child_process');
 const desktopPin = require('./desktop-pin');
 const widgetPlace = require('./widget-place');
 const { SensorPoller, findLhmExe, readLhmServer } = require('./sensors');
+const system = require('./system');
 
 if (!app.requestSingleInstanceLock()) {
   app.quit();
@@ -35,8 +36,13 @@ const STARTED_AT = Date.now();
 
 const DEFAULT_SETTINGS = {
   interval: 2000,
+  // Что показывать в виджете (меню «Показатели»)
   showLoad: true,
+  showPower: false,
   showGpu: true,
+  showMemory: true,
+  showBattery: true,
+  showDisks: false,
   warnTemp: 80,
   hotTemp: 90,
   autostart: true,
@@ -156,7 +162,7 @@ function installLhm() {
 
 // ---------- Показания ----------
 
-let readings = { state: 'waiting', cpu: null, gpus: [] };
+let readings = { state: 'waiting', cpu: null, gpus: [], disks: [], memory: null, battery: null };
 
 function onSensorData(data) {
   let state;
@@ -173,6 +179,10 @@ function onSensorData(data) {
     state,
     cpu: data.ok ? data.cpu : null,
     gpus: data.ok ? data.gpus : [],
+    disks: data.ok ? data.disks : [],
+    // Память и батарея — от Windows, они есть и без LHM
+    memory: system.readMemory(),
+    battery: system.readBattery(),
     lhm: { installed: !!lhm.exe, task: lhm.task, running: lhm.running },
   };
   send('readings', readings);
@@ -332,6 +342,25 @@ function radioMenu(key, values, label) {
   }));
 }
 
+function checkboxItem(label, key) {
+  return { label, type: 'checkbox', checked: settings[key], click: (item) => updateSettings({ [key]: item.checked }) };
+}
+
+function metricsMenu() {
+  return {
+    label: 'Показатели',
+    submenu: [
+      checkboxItem('Нагрузка CPU и GPU', 'showLoad'),
+      checkboxItem('Мощность CPU и GPU, Вт', 'showPower'),
+      { type: 'separator' },
+      checkboxItem('Видеокарта', 'showGpu'),
+      checkboxItem('Память', 'showMemory'),
+      { ...checkboxItem('Питание и батарея', 'showBattery'), enabled: !!readings.battery },
+      checkboxItem('Диски', 'showDisks'),
+    ],
+  };
+}
+
 function lhmMenuItems() {
   checkLhm();
   if (!lhm.exe) return [{ label: 'Установить LibreHardwareMonitor…', click: installLhm }];
@@ -351,18 +380,7 @@ function commonMenuItems() {
         { label: 'Красный с', submenu: radioMenu('hotTemp', HOT_TEMPS, (v) => `${v} °C`) },
       ],
     },
-    {
-      label: 'Показывать нагрузку',
-      type: 'checkbox',
-      checked: settings.showLoad,
-      click: (item) => updateSettings({ showLoad: item.checked }),
-    },
-    {
-      label: 'Показывать видеокарту',
-      type: 'checkbox',
-      checked: settings.showGpu,
-      click: (item) => updateSettings({ showGpu: item.checked }),
-    },
+    metricsMenu(),
     { type: 'separator' },
     {
       label: 'Поверх всех окон',

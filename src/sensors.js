@@ -13,8 +13,22 @@ const CPU_TEMP = ['CPU Package', 'Core (Tctl/Tdie)', 'Core Average', 'Core Max',
 const GPU_TEMP = ['GPU Core', 'GPU Hot Spot'];
 const CPU_LOAD = ['CPU Total'];
 const GPU_LOAD = ['GPU Core', 'D3D 3D'];
+const CPU_POWER = ['CPU Package'];
+const GPU_POWER = ['GPU Package', 'GPU Power', 'GPU Core'];
+// PSys у Intel: питание всей платформы (процессор, память, часть периферии) — ближе всего к потреблению ноутбука
+const PLATFORM_POWER = ['CPU Platform'];
+const DISK_TEMP = ['Composite Temperature', 'Temperature'];
+const DISK_LOAD = ['Total Activity'];
+// Пороги диска приходят теми же датчиками температуры — в максимум их брать нельзя
+const DISK_LIMITS = /warning|critical|limit/i;
 
 const round = (v) => (typeof v === 'number' && Number.isFinite(v) ? Math.round(v) : null);
+const round1 = (v) => (typeof v === 'number' && Number.isFinite(v) ? Math.round(v * 10) / 10 : null);
+const only = (sensors, names) => sensors.filter((s) => names.includes(s.name));
+const valueOf = (sensors, name) => {
+  const s = sensors.find((x) => x.name === name && typeof x.value === 'number');
+  return s ? s.value : null;
+};
 
 function pick(sensors, preferred) {
   for (const name of preferred) {
@@ -34,8 +48,8 @@ function cleanName(name) {
     .trim();
 }
 
-// hardware/sensors — массивы из WMI. Результат: { cpu, gpus } с температурой и нагрузкой в целых.
-// Видеокарта без датчика температуры (обычно встроенная Intel) в список не попадает.
+// hardware/sensors — из parseTree. Результат: { cpu, gpus, disks }; температура и нагрузка в целых, мощность (Вт) — до десятых.
+// Видеокарта и диск без датчика температуры (обычно встроенная Intel) в список не попадают.
 function selectReadings(hardware, sensors) {
   const of = (hw, type) => sensors.filter((s) => s.parent === hw.id && s.type === type);
   const cpuHw = hardware.find((h) => h.type === 'Cpu');
@@ -43,7 +57,9 @@ function selectReadings(hardware, sensors) {
     ? {
         name: cleanName(cpuHw.name),
         temp: round(pick(of(cpuHw, 'Temperature'), CPU_TEMP)),
-        load: round(pick(of(cpuHw, 'Load').filter((s) => CPU_LOAD.includes(s.name)), CPU_LOAD)),
+        load: round(pick(only(of(cpuHw, 'Load'), CPU_LOAD), CPU_LOAD)),
+        power: round1(pick(only(of(cpuHw, 'Power'), CPU_POWER), CPU_POWER)),
+        platformPower: round1(pick(only(of(cpuHw, 'Power'), PLATFORM_POWER), PLATFORM_POWER)),
       }
     : null;
   const gpus = hardware
@@ -51,11 +67,25 @@ function selectReadings(hardware, sensors) {
     .map((h) => ({
       name: cleanName(h.name),
       temp: round(pick(of(h, 'Temperature'), GPU_TEMP)),
-      load: round(pick(of(h, 'Load').filter((s) => GPU_LOAD.includes(s.name)), GPU_LOAD)),
+      load: round(pick(only(of(h, 'Load'), GPU_LOAD), GPU_LOAD)),
+      power: round1(pick(of(h, 'Power'), GPU_POWER)),
       integrated: h.type === 'GpuIntel',
     }))
     .filter((g) => g.temp !== null);
-  return { cpu, gpus };
+  const disks = hardware
+    .filter((h) => h.type === 'Storage')
+    .map((h) => {
+      const temps = of(h, 'Temperature');
+      return {
+        name: h.name,
+        temp: round(pick(temps.filter((s) => !DISK_LIMITS.test(s.name)), DISK_TEMP)),
+        load: round(pick(only(of(h, 'Load'), DISK_LOAD), DISK_LOAD)),
+        warnTemp: round(valueOf(temps, 'Warning Temperature')),
+        hotTemp: round(valueOf(temps, 'Critical Temperature')),
+      };
+    })
+    .filter((d) => d.temp !== null);
+  return { cpu, gpus, disks };
 }
 
 // ---------- Где LHM ----------
@@ -105,7 +135,7 @@ function readLhmServer(exe) {
 // Дерево: компьютер → устройство (HardwareId) → группа по типу → датчик (SensorId, Type, RawValue).
 // Тип устройства в JSON не пишется — берём его из картинки; cpu.png LHM ставит и неизвестным типам,
 // поэтому процессор дополнительно сверяем по идентификатору (/intelcpu/0, /amdcpu/0).
-const HW_IMAGES = { 'nvidia.png': 'GpuNvidia', 'ati.png': 'GpuAmd', 'intel.png': 'GpuIntel' };
+const HW_IMAGES = { 'nvidia.png': 'GpuNvidia', 'ati.png': 'GpuAmd', 'intel.png': 'GpuIntel', 'hdd.png': 'Storage' };
 
 function hardwareType(node) {
   const image = String(node.ImageURL || '').split('/').pop();
